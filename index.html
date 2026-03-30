@@ -1,0 +1,1075 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeu de Recrutement : Analysez les Transferts de Compétences</title>
+    <style>
+        /* --- VARIABLES & RESET --- */
+        :root {
+            --primary: #4F46E5; /* Indigo */
+            --primary-dark: #4338ca;
+            --secondary: #10B981; /* Emerald Green */
+            --bg-color: #F3F4F6;
+            --card-bg: #FFFFFF;
+            --text-main: #1F2937;
+            --text-muted: #6B7280;
+            --danger: #EF4444;
+            --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            --radius: 12px;
+            --font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: var(--font-family);
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+            padding-top: 180px;
+            min-height: 100vh;
+        }
+
+        /* --- INTRO SCREEN --- */
+        .intro-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: url('https://picsum.photos/seed/workplace/1920/1080');
+            background-size: cover;
+            background-position: center;
+            z-index: 5000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            color: white;
+            transition: opacity 0.5s ease-out;
+        }
+
+        .intro-overlay {
+            background: rgba(0, 0, 0, 0.7);
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+        }
+
+        .intro-content {
+            position: relative;
+            z-index: 5001;
+            padding: 2rem;
+            max-width: 800px;
+        }
+
+        .intro-title {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+
+        .intro-subtitle {
+            font-size: 1.2rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+
+        .btn-start {
+            background-color: var(--secondary);
+            color: white;
+            border: none;
+            padding: 1rem 3rem;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(16, 185, 129, 0.4);
+            transition: transform 0.2s, background-color 0.2s;
+        }
+
+        .btn-start:hover {
+            transform: scale(1.05);
+            background-color: #059669;
+        }
+
+        .intro-screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* --- STICKY HEADER (MISSION & TARGET JOB) --- */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            box-shadow: var(--shadow-sm);
+            z-index: 1000;
+            padding: 1rem 0;
+            border-bottom: 1px solid #e5e7eb;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .mission-box {
+            background-color: #EEF2FF;
+            border-left: 5px solid var(--primary);
+            padding: 1rem;
+            margin-bottom: 1rem;
+            border-radius: 0 var(--radius) var(--radius) 0;
+        }
+
+        .mission-title {
+            color: var(--primary);
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 0.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .mission-text {
+            font-size: 0.95rem;
+            color: var(--text-main);
+        }
+
+        .target-job-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--text-main);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-md);
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .target-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .target-label {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            text-transform: uppercase;
+        }
+
+        .target-name {
+            font-size: 1.4rem;
+            font-weight: 800;
+            color: var(--secondary);
+            line-height: 1;
+        }
+
+        .target-controls {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .progress-counter {
+            font-weight: bold;
+            background: rgba(255,255,255,0.2);
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.9rem;
+        }
+
+        /* Bouton Méto */
+        .btn-reference {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: white;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.2s;
+        }
+        .btn-reference:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        /* --- GAME GRID --- */
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem 20px;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+        }
+
+        /* --- PROFILE CARD --- */
+        .card {
+            background: var(--card-bg);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-md);
+            overflow: hidden;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            border: 2px solid transparent;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .card.validated {
+            border-color: var(--secondary);
+            background-color: #F0FDF4;
+        }
+
+        .card-header {
+            height: 100px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            position: relative;
+        }
+
+        .card-avatar {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 4px solid white;
+            position: absolute;
+            bottom: -40px;
+            left: 20px;
+            background-color: #ddd;
+            object-fit: cover;
+        }
+
+        .status-icon {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: white;
+            border-radius: 50%;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--text-muted);
+            box-shadow: var(--shadow-sm);
+        }
+
+        .card.validated .status-icon {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .card-body {
+            padding: 50px 20px 20px 20px;
+        }
+
+        .card-name {
+            font-size: 1.25rem;
+            font-weight: 700;
+            margin-bottom: 0.2rem;
+        }
+
+        .card-role {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .card-preview {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+
+        .btn-analyze {
+            margin-top: 1rem;
+            width: 100%;
+            padding: 0.75rem;
+            background-color: var(--bg-color);
+            color: var(--primary);
+            border: 2px solid var(--primary);
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-analyze:hover {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .card.validated .btn-analyze {
+            background-color: var(--secondary);
+            border-color: var(--secondary);
+            color: white;
+            cursor: default;
+        }
+
+        /* --- MODAL (Commune aux profils et à la fiche métier) --- */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(4px);
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .modal-content {
+            background: white;
+            width: 90%;
+            max-width: 800px;
+            max-height: 90vh;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow-lg);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transform: scale(0.9);
+            transition: transform 0.3s ease;
+        }
+
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+
+        .modal-header {
+            padding: 1.5rem;
+            background: var(--text-main);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .modal-header h2 {
+            font-size: 1.5rem;
+        }
+
+        .modal-header.reference-mode {
+            background: #059669; /* Vert foncé pour la référence */
+        }
+
+        .btn-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+            opacity: 0.7;
+        }
+        .btn-close:hover { opacity: 1; }
+
+        .modal-body {
+            padding: 1.5rem;
+            overflow-y: auto;
+        }
+
+        /* Spécifique Fiche Métier */
+        .reference-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+        }
+        .reference-column h3 {
+            color: #059669;
+            border-bottom: 2px solid #059669;
+            padding-bottom: 0.5rem;
+            margin-bottom: 1rem;
+        }
+        .ref-list {
+            list-style: none;
+        }
+        .ref-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #f3f4f6;
+            display: flex;
+            align-items: center;
+        }
+        .ref-list li::before {
+            content: "•";
+            color: #059669;
+            font-weight: bold;
+            margin-right: 10px;
+            font-size: 1.2rem;
+            line-height: 1;
+        }
+
+        /* Spécifique Profil (Jeu) */
+        .skills-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .skills-section h3 {
+            font-size: 1rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            margin-bottom: 0.8rem;
+            border-bottom: 1px solid #e5e7eb;
+            padding-bottom: 0.3rem;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        /* Custom Checkbox */
+        .skill-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .skill-item:hover {
+            background-color: #F9FAFB;
+        }
+
+        .skill-item input[type="checkbox"] {
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--primary);
+            border-radius: 4px;
+            margin-right: 12px;
+            position: relative;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+
+        .skill-item input[type="checkbox"]:checked {
+            background-color: var(--primary);
+        }
+
+        .skill-item input[type="checkbox"]:checked::after {
+            content: '✔';
+            position: absolute;
+            color: white;
+            font-size: 14px;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .skill-item.correct {
+            border-color: var(--secondary);
+            background-color: #ECFDF5;
+        }
+
+        .skill-item.wrong {
+            border-color: var(--danger);
+            background-color: #FEF2F2;
+        }
+
+        .modal-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid #e5e7eb;
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            gap: 1rem;
+            background: #F9FAFB;
+        }
+
+        .feedback-msg {
+            font-weight: 600;
+            font-size: 0.9rem;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .feedback-msg.error { color: var(--danger); opacity: 1; }
+        .feedback-msg.success { color: var(--secondary); opacity: 1; }
+
+        .btn-validate {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.8rem 2rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            font-size: 1rem;
+            box-shadow: 0 4px 6px rgba(79, 70, 229, 0.3);
+            transition: transform 0.1s;
+        }
+
+        .btn-validate:active { transform: scale(0.98); }
+
+        /* --- VICTORY SCREEN --- */
+        .victory-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(16, 185, 129, 0.95); /* Green overlay */
+            z-index: 3000;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s;
+        }
+        
+        .victory-screen.active {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .victory-icon {
+            font-size: 4rem;
+            margin-bottom: 1rem;
+            animation: bounce 2s infinite;
+        }
+
+        .victory-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            margin-bottom: 1rem;
+        }
+
+        .victory-text {
+            font-size: 1.2rem;
+            max-width: 600px;
+            margin-bottom: 2rem;
+        }
+
+        .btn-reset {
+            background: white;
+            color: var(--secondary);
+            padding: 1rem 2rem;
+            border-radius: 50px;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1.1rem;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: transform 0.2s;
+        }
+        .btn-reset:hover { transform: scale(1.05); }
+
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0);}
+            40% {transform: translateY(-20px);}
+            60% {transform: translateY(-10px);}
+        }
+
+        @media (max-width: 768px) {
+            body { padding-top: 240px; }
+            .target-job-bar { flex-direction: column; align-items: stretch; text-align: center; gap: 15px; }
+            .target-controls { justify-content: space-between; }
+            .reference-grid { grid-template-columns: 1fr; }
+            .intro-title { font-size: 2rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- PAGE D'INTRO -->
+    <div id="intro-screen" class="intro-screen">
+        <div class="intro-overlay"></div>
+        <div class="intro-content">
+            <h1 class="intro-title">Analyse de Compétences</h1>
+            <p class="intro-subtitle">
+                Bienvenue dans ce module de recrutement. Ta mission est d'identifier 
+                les compétences transférables de différents candidats vers un poste 
+                d'Employé Polyvalent.
+            </p>
+            <button class="btn-start" onclick="startGame()">Démarrer l'activité</button>
+        </div>
+    </div>
+
+    <!-- STICKY HEADER -->
+    <header>
+        <div class="header-content">
+            <div class="mission-box">
+                <div class="mission-title">Ta Mission</div>
+                <div class="mission-text">
+                    Tu vas découvrir 6 profils, chacun avec un prénom et un métier d’origine.<br>
+                    Chaque profil possède : <strong>des compétences professionnelles</strong> et <strong>des qualités</strong>.<br>
+                    <strong>Ta mission :</strong> 👉 Sélectionner toutes les compétences transférables vers le métier d’<strong>Employé Polyvalent</strong>.
+                </div>
+            </div>
+            
+            <div class="target-job-bar">
+                <div class="target-info">
+                    <span class="target-label">Métier Cible</span>
+                    <div class="target-name">Employé Polyvalent</div>
+                </div>
+                
+                <div class="target-controls">
+                    <!-- Bouton Méto Cible -->
+                    <button class="btn-reference" onclick="openReferenceModal()">
+                        📋 Fiche Métier (Référence)
+                    </button>
+
+                    <div class="progress-counter">
+                        <span id="completed-count">0</span> / 6 Validés
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- MAIN GRID -->
+    <main>
+        <div class="grid-container" id="cards-container">
+            <!-- Cards will be injected by JS -->
+        </div>
+    </main>
+
+    <!-- MODAL FICHE MÉTIER (RÉFÉRENCE) -->
+    <div class="modal-overlay" id="reference-modal">
+        <div class="modal-content">
+            <div class="modal-header reference-mode">
+                <h2>Métier Cible : Employé Polyvalent</h2>
+                <button class="btn-close" onclick="closeReferenceModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p style="margin-bottom: 1.5rem; color: #666;">Voici les compétences recherchées pour ce poste. Utilise cette liste comme référence pour valider les profils.</p>
+                <div class="reference-grid">
+                    <div class="reference-column">
+                        <h3>🔧 Compétences professionnelles</h3>
+                        <ul class="ref-list">
+                            <li>Accueil client</li>
+                            <li>Encaissement</li>
+                            <li>Préparation de produits simples</li>
+                            <li>Mise en rayon</li>
+                            <li>Gestion de stocks de base</li>
+                            <li>Nettoyage / entretien</li>
+                            <li>Respect des règles d’hygiène et sécurité</li>
+                            <li>Suivi de procédures</li>
+                            <li>Travail en cadence</li>
+                            <li>Utilisation d’outils simples (caisse, terminal CB)</li>
+                        </ul>
+                    </div>
+                    <div class="reference-column">
+                        <h3>🌱 Qualités</h3>
+                        <ul class="ref-list">
+                            <li>Rigueur</li>
+                            <li>Organisation</li>
+                            <li>Sens du service</li>
+                            <li>Communication</li>
+                            <li>Adaptabilité</li>
+                            <li>Travail en équipe</li>
+                            <li>Gestion du stress</li>
+                            <li>Ponctualité</li>
+                            <li>Autonomie</li>
+                            <li>Fiabilité</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-validate" style="background-color: #059669;" onclick="closeReferenceModal()">J'ai compris</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DETAIL PROFIL -->
+    <div class="modal-overlay" id="profile-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-name">Nom du Profil</h2>
+                <button class="btn-close" id="btn-close-modal">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="modal-role" style="margin-bottom: 1rem; font-weight: 500; color: var(--primary);"></p>
+                
+                <form id="skills-form">
+                    <div class="skills-section">
+                        <h3>Compétences professionnelles</h3>
+                        <div class="checkbox-group" id="hard-skills-list"></div>
+                    </div>
+                    <div class="skills-section">
+                        <h3>Qualités</h3>
+                        <div class="checkbox-group" id="soft-skills-list"></div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <span class="feedback-msg" id="validation-msg"></span>
+                <button class="btn-validate" id="btn-validate">Valider ce profil</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- VICTORY SCREEN -->
+    <div class="victory-screen" id="victory-screen">
+        <div class="victory-icon">🏆</div>
+        <h1 class="victory-title">Excellent travail !</h1>
+        <p class="victory-text">
+            Tu as identifié toutes les compétences transférables pour le poste d'Employé Polyvalent.<br>
+            Ta capacité d'analyse est remarquable.
+        </p>
+        <button class="btn-reset" onclick="location.reload()">Rejouer</button>
+    </div>
+
+    <script>
+        // --- DONNÉES DU JEU ---
+        const profilesData = [
+            {
+                id: 1,
+                name: "Sophie",
+                role: "Agent d'entretien",
+                avatar: "https://picsum.photos/seed/sophie/150/150",
+                skills: [
+                    { text: "Nettoyage / hygiène", type: "hard", correct: true },
+                    { text: "Respect des protocoles", type: "hard", correct: true },
+                    { text: "Tâches répétitives", type: "hard", correct: true },
+                    { text: "Organisation simple du travail", type: "hard", correct: true },
+                    { text: "Utilisation de produits chimiques industriels", type: "hard", correct: false }, // Piège
+                    { text: "Rigueur", type: "soft", correct: true },
+                    { text: "Autonomie", type: "soft", correct: true },
+                    { text: "Organisation", type: "soft", correct: true },
+                    { text: "Fiabilité", type: "soft", correct: true },
+                    { text: "Respect des consignes", type: "soft", correct: true },
+                    { text: "Solitude prolongée", type: "soft", correct: false } // Piège
+                ]
+            },
+            {
+                id: 2,
+                name: "Karim",
+                role: "Aide-soignant / Cantinier",
+                avatar: "https://picsum.photos/seed/karim/150/150",
+                skills: [
+                    { text: "Préparation de repas simples", type: "hard", correct: true },
+                    { text: "Maintien d’un environnement propre", type: "hard", correct: true },
+                    { text: "Gestion d’un planning", type: "hard", correct: true },
+                    { text: "Observation / vigilance", type: "hard", correct: true },
+                    { text: "Soins médicaux avancés", type: "hard", correct: false }, // Piège
+                    { text: "Sens du service", type: "soft", correct: true },
+                    { text: "Communication", type: "soft", correct: true },
+                    { text: "Organisation", type: "soft", correct: true },
+                    { text: "Adaptabilité", type: "soft", correct: true },
+                    { text: "Gestion du stress", type: "soft", correct: true },
+                    { text: "Empathie émotionnelle", type: "soft", correct: false } // Piège
+                ]
+            },
+            {
+                id: 3,
+                name: "Luc",
+                role: "Préparateur de commandes",
+                avatar: "https://picsum.photos/seed/luc/150/150",
+                skills: [
+                    { text: "Préparation de commandes", type: "hard", correct: true },
+                    { text: "Vérification / contrôle", type: "hard", correct: true },
+                    { text: "Organisation d’un espace", type: "hard", correct: true },
+                    { text: "Travail en cadence", type: "hard", correct: true },
+                    { text: "Conduite de chariot élévateur", type: "hard", correct: false }, // Piège
+                    { text: "Rigueur", type: "soft", correct: true },
+                    { text: "Respect des consignes", type: "soft", correct: true },
+                    { text: "Travail en équipe", type: "soft", correct: true },
+                    { text: "Réactivité", type: "soft", correct: true },
+                    { text: "Force physique excessive", type: "soft", correct: false } // Piège
+                ]
+            },
+            {
+                id: 4,
+                name: "Mélanie",
+                role: "Animatrice sportive",
+                avatar: "https://picsum.photos/seed/melanie/150/150",
+                skills: [
+                    { text: "Organisation d’espaces", type: "hard", correct: true },
+                    { text: "Gestion d’imprévus", type: "hard", correct: true },
+                    { text: "Encadrement / animation", type: "hard", correct: true },
+                    { text: "Techniques de secourisme", type: "hard", correct: false }, // Piège
+                    { text: "Communication", type: "soft", correct: true },
+                    { text: "Gestion du stress", type: "soft", correct: true },
+                    { text: "Travail en équipe", type: "soft", correct: true },
+                    { text: "Adaptabilité", type: "soft", correct: true },
+                    { text: "Sens des responsabilités", type: "soft", correct: true },
+                    { text: "Compétition", type: "soft", correct: false } // Piège
+                ]
+            },
+            {
+                id: 5,
+                name: "Jean",
+                role: "Livreur",
+                avatar: "https://picsum.photos/seed/jean/150/150",
+                skills: [
+                    { text: "Contact client", type: "hard", correct: true },
+                    { text: "Gestion de documents simples", type: "hard", correct: true },
+                    { text: "Chargement / déchargement", type: "hard", correct: true },
+                    { text: "Respect d’un itinéraire", type: "hard", correct: true },
+                    { text: "Logistique avancée", type: "hard", correct: false }, // Piège
+                    { text: "Ponctualité", type: "soft", correct: true },
+                    { text: "Organisation", type: "soft", correct: true },
+                    { text: "Fiabilité", type: "soft", correct: true },
+                    { text: "Autonomie", type: "soft", correct: true },
+                    { text: "Sens du service", type: "soft", correct: true },
+                    { text: "Conduite nocturne", type: "soft", correct: false } // Piège
+                ]
+            },
+            {
+                id: 6,
+                name: "Ana",
+                role: "Agricultrice / Cueilleuse",
+                avatar: "https://picsum.photos/seed/ana/150/150",
+                skills: [
+                    { text: "Récolte / tri / conditionnement", type: "hard", correct: true },
+                    { text: "Travail en cadence", type: "hard", correct: true },
+                    { text: "Utilisation d’outils simples", type: "hard", correct: true },
+                    { text: "Tâches répétitives", type: "hard", correct: true },
+                    { text: "Conduite de tracteur", type: "hard", correct: false }, // Piège
+                    { text: "Endurance", type: "soft", correct: true },
+                    { text: "Rigueur", type: "soft", correct: true },
+                    { text: "Respect des consignes", type: "soft", correct: true },
+                    { text: "Travail en équipe", type: "soft", correct: true },
+                    { text: "Adaptabilité", type: "soft", correct: true }
+                ]
+            }
+        ];
+
+        // --- ETAT DU JEU ---
+        let completedProfiles = new Set();
+        let currentProfileId = null;
+
+        // --- ELEMENTS DOM ---
+        const container = document.getElementById('cards-container');
+        const modal = document.getElementById('profile-modal');
+        const btnCloseModal = document.getElementById('btn-close-modal');
+        const btnValidate = document.getElementById('btn-validate');
+        const validationMsg = document.getElementById('validation-msg');
+        const completedCountSpan = document.getElementById('completed-count');
+        const victoryScreen = document.getElementById('victory-screen');
+        const referenceModal = document.getElementById('reference-modal');
+        const introScreen = document.getElementById('intro-screen');
+
+        // --- GESTION INTRO ---
+        function startGame() {
+            introScreen.classList.add('hidden');
+            initGame();
+        }
+
+        // --- INITIALISATION ---
+        function initGame() {
+            renderCards();
+        }
+
+        // Mélanger un tableau
+        function shuffle(array) {
+            return array.sort(() => Math.random() - 0.5);
+        }
+
+        // Rendu des cartes sur la grille
+        function renderCards() {
+            container.innerHTML = '';
+            profilesData.forEach(profile => {
+                const isValidated = completedProfiles.has(profile.id);
+                const card = document.createElement('div');
+                card.className = `card ${isValidated ? 'validated' : ''}`;
+                card.onclick = () => openModal(profile.id);
+
+                card.innerHTML = `
+                    <div class="card-header">
+                        <img src="${profile.avatar}" alt="${profile.name}" class="card-avatar">
+                        <div class="status-icon">${isValidated ? '✔' : profile.id}</div>
+                    </div>
+                    <div class="card-body">
+                        <h3 class="card-name">${profile.name}</h3>
+                        <span class="card-role">${profile.role}</span>
+                        <p class="card-preview">${isValidated ? 'Compétences validées' : 'Clique pour analyser les compétences'}</p>
+                        <button class="btn-analyze">${isValidated ? 'Profil Validé' : 'Analyser le profil'}</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // --- GESTION MODAL RÉFÉRENCE ---
+        function openReferenceModal() {
+            referenceModal.classList.add('active');
+        }
+        function closeReferenceModal() {
+            referenceModal.classList.remove('active');
+        }
+
+        // Ouverture de la modale Profil
+        function openModal(id) {
+            if (completedProfiles.has(id)) return;
+
+            currentProfileId = id;
+            const profile = profilesData.find(p => p.id === id);
+            
+            document.getElementById('modal-name').textContent = profile.name;
+            document.getElementById('modal-role').textContent = `Métier d'origine : ${profile.role}`;
+            
+            // Reset Form & Feedback
+            document.getElementById('skills-form').reset();
+            validationMsg.className = 'feedback-msg';
+            validationMsg.textContent = '';
+            btnValidate.disabled = false;
+            btnValidate.textContent = "Valider ce profil";
+
+            // Remplir les listes (mélangées)
+            const hardList = document.getElementById('hard-skills-list');
+            const softList = document.getElementById('soft-skills-list');
+            hardList.innerHTML = '';
+            softList.innerHTML = '';
+
+            const hardSkills = profile.skills.filter(s => s.type === 'hard');
+            const softSkills = profile.skills.filter(s => s.type === 'soft');
+
+            shuffle(hardSkills).forEach(skill => addCheckbox(skill, hardList));
+            shuffle(softSkills).forEach(skill => addCheckbox(skill, softList));
+
+            modal.classList.add('active');
+        }
+
+        function addCheckbox(skill, container) {
+            const label = document.createElement('label');
+            label.className = 'skill-item';
+            
+            const checkbox = document.createElement('input');
+            checkbox.type = 'checkbox';
+            checkbox.value = skill.text;
+            checkbox.dataset.correct = skill.correct; 
+            
+            const text = document.createElement('span');
+            text.textContent = skill.text;
+
+            label.appendChild(checkbox);
+            label.appendChild(text);
+            container.appendChild(label);
+        }
+
+        // Fermeture de la modale Profil
+        function closeModal() {
+            modal.classList.remove('active');
+            currentProfileId = null;
+        }
+
+        // Logique de validation
+        btnValidate.addEventListener('click', () => {
+            if (!currentProfileId) return;
+
+            const checkboxes = document.querySelectorAll('#skills-form input[type="checkbox"]');
+            let allCorrect = true;
+
+            // Réinitialiser les styles visuels
+            document.querySelectorAll('.skill-item').forEach(el => {
+                el.classList.remove('correct', 'wrong');
+            });
+
+            checkboxes.forEach(cb => {
+                const parent = cb.parentElement;
+                const isCorrect = cb.dataset.correct === 'true';
+                const isChecked = cb.checked;
+
+                if (isChecked) {
+                    if (isCorrect) {
+                        parent.classList.add('correct');
+                    } else {
+                        // L'utilisateur a coché une mauvaise réponse
+                        allCorrect = false;
+                        parent.classList.add('wrong');
+                    }
+                } else {
+                    // L'utilisateur n'a pas coché
+                    if (isCorrect) {
+                        // C'était une bonne réponse manquée
+                        allCorrect = false;
+                    }
+                }
+            });
+
+            // Vérifier si toutes les bonnes réponses sont cochées
+            const totalCorrectSkills = document.querySelectorAll('#skills-form input[data-correct="true"]').length;
+            const correctCheckedCount = document.querySelectorAll('#skills-form input[data-correct="true"]:checked').length;
+            
+            if (correctCheckedCount === totalCorrectSkills && !document.querySelector('.wrong')) {
+                // SUCCÈS
+                validationMsg.textContent = "Bravo ! Profil validé.";
+                validationMsg.className = "feedback-msg success";
+                btnValidate.textContent = "Validé ✓";
+                btnValidate.disabled = true;
+                
+                completedProfiles.add(currentProfileId);
+                updateProgress();
+
+                setTimeout(() => {
+                    closeModal();
+                    renderCards();
+                    checkVictory();
+                }, 1000);
+
+            } else {
+                // ÉCHEC
+                validationMsg.textContent = "Erreur : Vérifie tes sélections (certaines ne sont pas transférables ou il en manque).";
+                validationMsg.className = "feedback-msg error";
+                
+                // Secousse
+                btnValidate.style.animation = "shake 0.5s";
+                setTimeout(() => btnValidate.style.animation = "", 500);
+            }
+        });
+
+        function updateProgress() {
+            completedCountSpan.textContent = completedProfiles.size;
+        }
+
+        function checkVictory() {
+            if (completedProfiles.size === profilesData.length) {
+                victoryScreen.classList.add('active');
+            }
+        }
+
+        // Écouteurs
+        btnCloseModal.addEventListener('click', closeModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+
+        // Fermer la référence en cliquant dehors
+        referenceModal.addEventListener('click', (e) => {
+            if (e.target === referenceModal) closeReferenceModal();
+        });
+
+    </script>
+</body>
+</html>st
